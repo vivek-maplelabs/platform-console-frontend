@@ -101,6 +101,21 @@ angular.module('appControllers').controller('ApplicationCtrl', ['$scope', '$filt
           case "DESTROYING":
             text = "Deleting...";
             break;
+          case "DESTROYING":
+            text = "Deleting...";
+            break;
+          case "KILLED":
+            text = "Killed";
+            break;
+          case "FAILED":
+            text = "Failed";
+            break;
+          case "COMPLETED":
+            text = "Completed";
+            break;
+          case "STOPPED":
+            text = "Stopped";
+            break;
         }
         return text;
       }
@@ -127,7 +142,8 @@ angular.module('appControllers').controller('ApplicationCtrl', ['$scope', '$filt
       if ((status === "NOTCREATED" && information === null) || status === "DESTROYING") {
         $scope.alertClass = "alert-success";
         $timeout($scope.getAppsList(status), 2000);
-      } else if (status === 200 || status === "CREATED" || status === "STARTED") {
+      } else if (status === 200 || status === "CREATED" || status === "STARTED" || status === "COMPLETED" ||
+        status === "KILLED" || status ===  "FAILED" || status ===  "STOPPED") {
         $scope.alertClass = "alert-success";
         $timeout($scope.refreshAppsList(applicationName, status, isNewApp), 3000);
       } else if (status === 202 || status === "CREATING"
@@ -270,8 +286,18 @@ angular.module('appControllers').controller('ApplicationCtrl', ['$scope', '$filt
     $scope.getAppsList();
 
     $scope.startOrStopApplication = function(name, status) {
-      var action = status === Constants.APPLICATION.CREATED ? "start" : status === Constants.APPLICATION.STARTED
-      ? "stop" : undefined;
+      var action;
+      if(status === Constants.APPLICATION.CREATED || status === Constants.APPLICATION.COMPLETED ||
+         status === Constants.APPLICATION.FAILED || status === Constants.APPLICATION.KILLED ||
+         status === Constants.APPLICATION.STOPPED ){
+        action = "start";
+      }else{
+         if(status === Constants.APPLICATION.STARTED){
+           action = "stop";
+         }else{
+           action = undefined;
+         }
+      }
       
       if (action !== undefined) {
         displayConfirmation("Are you sure you want to " + action + " " + name + "?", function() {
@@ -343,10 +369,10 @@ angular.module('appControllers').controller('ApplicationCtrl', ['$scope', '$filt
     };
 
     $scope.getApplicationSummary = function(appName){
-       DeploymentManagerService.getApplicationSummary(appName).then(function(data) {
-         $scope.appSummaryJson = data;
-       });
-    };
+      DeploymentManagerService.getApplicationSummary(appName).then(function(data) {
+        $scope.appSummaryJson = data;
+      });
+   };
 
     $scope.createNewApp = function() {
       $scope.newApp = true;
@@ -361,7 +387,14 @@ angular.module('appControllers').controller('ApplicationCtrl', ['$scope', '$filt
     };
 	
   $scope.showInfoModal = function(appName){
-    $scope.getApplicationSummary(appName);
+    var summaryData = DeploymentManagerService.getApplicationSummary(appName);
+    summaryData.then(function(data) {
+        $scope.appSummaryJson = data;
+        $scope.summaryModal(appName);
+   });
+  };
+
+  $scope.summaryModal = function(appName){
     var fields = {};
     if($scope.appSummaryJson === undefined){
        fields = {
@@ -369,8 +402,7 @@ angular.module('appControllers').controller('ApplicationCtrl', ['$scope', '$filt
        };
        ModalService.createModalView('partials/modals/application-status-error.html', fields);
     
-    }else if($scope.appSummaryJson !== undefined 
-            && $scope.appSummaryJson[Object.keys($scope.appSummaryJson)[0]].status !== undefined){
+    }else if($scope.appSummaryJson[appName].aggregate_status === "Not Available"){
         fields = {
             error: "No Data found. Please refresh the page and try again later.",
             title: 'application',
@@ -602,3 +634,4 @@ angular.module('appControllers').controller('ApplicationCtrl', ['$scope', '$filt
 
     socket.on('platform-console-frontend-metric-update', socketMetricsUpdate);
   }]);
+

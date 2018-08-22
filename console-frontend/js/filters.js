@@ -198,6 +198,18 @@ metricFilters.filter('changeAppStatusForDisplay', function() {
         case "STOPPING":
           display = "Stopping...";
           break;
+        case "STOPPED":
+          display = "Stopped";
+          break;
+        case "KILLED":
+          display = "Killed";
+          break;
+         case "FAILED":
+          display = "Failed";
+          break;
+         case "COMPLETED":
+           display = "Completed";
+           break;
       }
     }
 

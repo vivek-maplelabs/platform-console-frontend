@@ -30,7 +30,7 @@
                 <td ng-click="getApplicationDetails(app)" style="cursor:pointer"><a ng-click="getApplicationDetails(app)" href="#/applications">{{ app.name }}</a></td>
                 <td ng-click="getApplicationDetails(app)" style="cursor:pointer">{{ app.status | changeAppStatusForDisplay }}</td>
                 <td class="application" >
-                  <div ng-if="app.status === 'CREATED'">
+                  <div ng-if="app.status === 'CREATED' || app.status === 'FAILED' || app.status === 'KILLED' || app.status === 'COMPLETED' || app.status === 'STOPPED'">
                     <button type="button" class="btn btn-default btn-sm" ng-click="startOrStopApplication(app.name, app.status)">
                       <span class="glyphicon glyphicon-play icon-start" aria-hidden="true"></span>Start
                     </button>
